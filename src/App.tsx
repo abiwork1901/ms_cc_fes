@@ -54,7 +54,10 @@ function App() {
         return '';
       case 'limit':
         if (!value) return 'Credit limit is required';
-        if (parseFloat(value) <= 0) return 'Credit limit must be greater than 0';
+        if (!/^-?\d*\.?\d*$/.test(value)) return 'Only numbers are allowed';
+        const numValue = parseFloat(value);
+        if (isNaN(numValue)) return 'Only numbers are allowed';
+        if (numValue <= 0) return 'Credit limit must be greater than 0';
         return '';
       default:
         return '';
@@ -65,7 +68,7 @@ function App() {
     const errorMessage = validateField(field, value);
     setFieldErrors(prev => ({
       ...prev,
-      [field]: { message: errorMessage, show: !!errorMessage }
+      [field]: { message: errorMessage, show: true }
     }));
 
     switch (field) {
@@ -79,6 +82,14 @@ function App() {
         setLimit(value);
         break;
     }
+  };
+
+  const handleBlur = (field: string, value: string) => {
+    const errorMessage = validateField(field, value);
+    setFieldErrors(prev => ({
+      ...prev,
+      [field]: { message: errorMessage, show: !!errorMessage }
+    }));
   };
 
   const validateForm = (): boolean => {
@@ -154,7 +165,7 @@ function App() {
           cardNumber: { message: '', show: false },
           limit: { message: '', show: false }
         });
-        fetchCards();
+        await fetchCards();
       }
     } catch (err: unknown) {
       console.error('Network error:', err);
@@ -177,13 +188,14 @@ function App() {
           <input 
             value={name} 
             onChange={e => handleFieldChange('name', e.target.value)}
+            onBlur={e => handleBlur('name', e.target.value)}
             required 
             placeholder="Enter cardholder name"
             className={getFieldErrorClass('name')}
             aria-invalid={fieldErrors.name.show}
             aria-describedby={fieldErrors.name.show ? 'name-error' : undefined}
           />
-          {fieldErrors.name.show && (
+          {fieldErrors.name.message && (
             <div className="error-bubble" id="name-error" role="alert">
               {fieldErrors.name.message}
             </div>
@@ -194,6 +206,7 @@ function App() {
           <input
             value={cardNumber}
             onChange={e => handleFieldChange('cardNumber', e.target.value)}
+            onBlur={e => handleBlur('cardNumber', e.target.value)}
             maxLength={19}
             required
             pattern="\d{1,19}"
@@ -203,7 +216,7 @@ function App() {
             aria-invalid={fieldErrors.cardNumber.show}
             aria-describedby={fieldErrors.cardNumber.show ? 'cardNumber-error' : undefined}
           />
-          {fieldErrors.cardNumber.show && (
+          {fieldErrors.cardNumber.message && (
             <div className="error-bubble" id="cardNumber-error" role="alert">
               {fieldErrors.cardNumber.message}
             </div>
@@ -212,18 +225,20 @@ function App() {
         <div className="form-field">
           <label>Limit (£)</label>
           <input
-            type="number"
+            type="text"
             value={limit}
             onChange={e => handleFieldChange('limit', e.target.value)}
-            min="0"
-            step="0.01"
+            onBlur={e => handleBlur('limit', e.target.value)}
+            inputMode="decimal"
+            pattern="-?\d*\.?\d*"
             required
             placeholder="Enter credit limit"
             className={getFieldErrorClass('limit')}
             aria-invalid={fieldErrors.limit.show}
             aria-describedby={fieldErrors.limit.show ? 'limit-error' : undefined}
           />
-          {fieldErrors.limit.show && (
+          <small className="hint-text">Limit can be numerical only</small>
+          {fieldErrors.limit.message && (
             <div className="error-bubble" id="limit-error" role="alert">
               {fieldErrors.limit.message}
             </div>
@@ -242,13 +257,13 @@ function App() {
       {cards.length === 0 ? (
         <p className="no-cards">No cards added yet.</p>
       ) : (
-        <table className="card-list">
+        <table className="card-list" role="table" aria-label="Credit Cards List">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Card Number</th>
-              <th>Limit (£)</th>
-              <th>Balance (£)</th>
+              <th scope="col">Name</th>
+              <th scope="col">Card Number</th>
+              <th scope="col">Limit (£)</th>
+              <th scope="col">Balance (£)</th>
             </tr>
           </thead>
           <tbody>
@@ -256,8 +271,8 @@ function App() {
               <tr key={card.id}>
                 <td>{card.name}</td>
                 <td>{maskCardNumber(card.cardNumber)}</td>
-                <td>{card.creditLimit.toFixed(2)}</td>
-                <td>{card.balance.toFixed(2)}</td>
+                <td>£{card.creditLimit.toFixed(2)}</td>
+                <td>£{card.balance.toFixed(2)}</td>
               </tr>
             ))}
           </tbody>

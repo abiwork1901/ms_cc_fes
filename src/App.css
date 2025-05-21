@@ -151,6 +151,14 @@ h1, h2 {
   box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
 }
 
+.hint-text {
+  display: block;
+  color: #666;
+  font-size: 0.8rem;
+  margin-top: 4px;
+  font-style: italic;
+}
+
 .error-bubble {
   position: absolute;
   top: 100%;

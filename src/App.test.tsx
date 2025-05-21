@@ -238,16 +238,16 @@ describe('Credit Card System', () => {
 
   test('displays card list', async () => {
     // Mock cards data
-    const mockCards = [
-      {
-        id: 1,
-        name: 'John Doe',
-        cardNumber: '4111111111111111',
-        creditLimit: 1000,
-        balance: 0
-      }
-    ];
+    const mockCards = [{
+      id: 1,
+      name: 'John Doe',
+      cardNumber: '4111111111111111',
+      creditLimit: 1000,
+      balance: 0
+    }];
 
+    // Mock the initial fetch to return cards
+    mockFetch.mockReset();
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockCards
@@ -259,7 +259,8 @@ describe('Credit Card System', () => {
     await waitFor(() => {
       expect(screen.getByRole('table')).toBeInTheDocument();
       expect(screen.getByText('John Doe')).toBeInTheDocument();
-      expect(screen.getByText('£1000')).toBeInTheDocument();
+      expect(screen.getByText('£1000.00')).toBeInTheDocument();
+      expect(screen.getByText('£0.00')).toBeInTheDocument();
     });
   });
 });
